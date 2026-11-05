@@ -1428,7 +1428,7 @@ struct LocationSimulationView: View {
         simulatedCoordinate = coordinate
         LocationSimulationSession.shared.startResending(at: coordinate) {
             LocationSimulationCommandQueue.shared.async {
-                _ = locationUpdateCode(for: coordinate)
+                _ = locationUpdateCode(for: LocationJitter.shared.next(around: coordinate))
             }
         }
     }

@@ -232,10 +232,16 @@ struct MainTabView: View {
                         )
                     ) {
                         LocationSimulationCommandQueue.shared.async {
+                            let jittered = LocationJitter.shared.next(
+                                around: CLLocationCoordinate2D(
+                                    latitude: coordinate.latitude,
+                                    longitude: coordinate.longitude
+                                )
+                            )
                             _ = simulate_location(
                                 DeviceConnectionContext.targetIPAddress,
-                                coordinate.latitude,
-                                coordinate.longitude,
+                                jittered.latitude,
+                                jittered.longitude,
                                 pairingFile.path
                             )
                         }

@@ -19,6 +19,8 @@ struct SettingsView: View {
     @AppStorage(UserDefaults.Keys.confirmExternalJITRequests) private var confirmExternalJITRequests = true
     @AppStorage("keepAliveAudio") private var keepAliveAudio = true
     @AppStorage("keepAliveLocation") private var keepAliveLocation = true
+    @AppStorage(LocationJitter.enabledKey) private var locationJitterEnabled = false
+    @AppStorage(LocationJitter.radiusKey) private var locationJitterRadius = LocationJitter.defaultRadius
     @AppStorage(UserDefaults.Keys.targetDeviceIP) private var targetDeviceIP = DeviceConnectionContext.defaultTargetIPAddress
     @AppStorage("TunnelRemotePairingPort") private var remotePairingPortOverride = ""
     @AppStorage(UserDefaults.Keys.mallocDebug) private var mallocDebug = false
@@ -128,6 +130,32 @@ struct SettingsView: View {
 
                 } header: {
                     Text("Background Keep-Alive")
+                }
+
+                Section {
+                    Toggle(isOn: $locationJitterEnabled) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Natural GPS Wander")
+                            Text("Adds slow drift and small noise around a fixed point, and varies the update interval.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    if locationJitterEnabled {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Wander Radius")
+                                Spacer()
+                                Text("\(Int(locationJitterRadius)) m")
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                            Slider(value: $locationJitterRadius, in: 2...40, step: 1)
+                            Text("Indoors with Wi-Fi: 5–10 m. Outdoors / weak signal: 10–25 m.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Location Simulation")
                 }
 
                 Section("Behavior") {

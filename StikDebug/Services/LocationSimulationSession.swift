@@ -25,7 +25,18 @@ final class LocationSimulationSession: ObservableObject {
     func startResending(at coordinate: CLLocationCoordinate2D, _ operation: @escaping () -> Void) {
         start(at: coordinate)
         resendTimer?.invalidate()
-        let timer = Timer(timeInterval: 4, repeats: true) { _ in operation() }
+        scheduleNextResend(operation)
+    }
+
+    /// Self-rescheduling one-shot timer so the interval can vary per tick
+    /// (LocationJitter randomises it when enabled; otherwise a steady 4 s).
+    private func scheduleNextResend(_ operation: @escaping () -> Void) {
+        let interval = LocationJitter.shared.nextInterval(base: 4)
+        let timer = Timer(timeInterval: interval, repeats: false) { [weak self] _ in
+            guard let self, self.resendTimer != nil else { return }
+            operation()
+            self.scheduleNextResend(operation)
+        }
         RunLoop.main.add(timer, forMode: .common)
         resendTimer = timer
     }
@@ -59,6 +70,7 @@ final class LocationSimulationSession: ObservableObject {
     func stop() {
         pauseResending()
         clearRoute()
+        LocationJitter.shared.reset()
         guard isActive else { return }
         isActive = false
         coordinate = nil

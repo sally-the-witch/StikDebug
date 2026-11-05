@@ -19,7 +19,7 @@ jobs:
       github.ref_type == 'tag' ||
       github.repository != 'StikDebug/StikDebug' ||
       github.ref == 'refs/heads/main'
-    runs-on: xcode-27
+    runs-on: macos-26
     outputs:
       version: ${{ steps.version.outputs.version }}
     env:
@@ -36,6 +36,7 @@ jobs:
 
       - name: 3. Compile Project Archive
         run: |
+          xcodebuild -version
           xcodebuild clean archive \
             -project StikDebug.xcodeproj \
             -scheme "StikDebug" \
