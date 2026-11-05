@@ -1329,6 +1329,28 @@ struct LocationSimulationView: View {
 
     private func simulate() {
         guard pairingExists, let coord = coordinate, !isBusy else { return }
+
+        // Already simulating somewhere else → travel there instead of teleporting.
+        if TravelSimulator.shared.shouldTravel(to: coord) {
+            stopResendLoop()
+            cancelRoutePlayback(resetMarker: true)
+            beginBackgroundTask()
+            simulatedCoordinate = coord
+            TravelSimulator.shared.travel(
+                to: coord,
+                deviceIP: deviceIP,
+                pairingFilePath: pairingFilePath
+            ) { code in
+                guard let code else { return }
+                alertTitle = "Travel Simulation Failed"
+                alertMessage = "Could not continue moving to the new location (error \(code)). Holding at the last reported point."
+                connectionErrorMessage = "Code \(code): Travel simulation failed."
+                showAlert = true
+            }
+            return
+        }
+
+        TravelSimulator.shared.cancel()
         runLocationCommand(
             errorTitle: "Simulation Failed",
             errorMessage: { code in
@@ -1350,6 +1372,7 @@ struct LocationSimulationView: View {
               !isBusy else {
             return
         }
+        TravelSimulator.shared.cancel()
         stopResendLoop()
         cancelRoutePlayback(resetMarker: false)
         runLocationCommand(
@@ -1400,6 +1423,7 @@ struct LocationSimulationView: View {
         routeLoadTask = nil
         routeSpeedPrefetchTask?.cancel()
         routeSpeedPrefetchTask = nil
+        TravelSimulator.shared.cancel()
         cancelRoutePlayback(resetMarker: true)
         stopResendLoop()
         LocationSimulationSession.shared.clearRoute()

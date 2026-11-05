@@ -21,6 +21,8 @@ struct SettingsView: View {
     @AppStorage("keepAliveLocation") private var keepAliveLocation = true
     @AppStorage(LocationJitter.enabledKey) private var locationJitterEnabled = false
     @AppStorage(LocationJitter.radiusKey) private var locationJitterRadius = LocationJitter.defaultRadius
+    @AppStorage(TravelSimulator.enabledKey) private var travelBetweenPoints = false
+    @AppStorage(TravelSimulator.modeKey) private var travelModeRaw = TravelSimulator.Mode.auto.rawValue
     @AppStorage(UserDefaults.Keys.targetDeviceIP) private var targetDeviceIP = DeviceConnectionContext.defaultTargetIPAddress
     @AppStorage("TunnelRemotePairingPort") private var remotePairingPortOverride = ""
     @AppStorage(UserDefaults.Keys.mallocDebug) private var mallocDebug = false
@@ -153,6 +155,24 @@ struct SettingsView: View {
                             Text("Indoors with Wi-Fi: 5–10 m. Outdoors / weak signal: 10–25 m.")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
+                    }
+
+                    Toggle(isOn: $travelBetweenPoints) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Travel Between Points")
+                            Text("When a new point is simulated while one is active, move there along a real route at a realistic pace instead of jumping.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    if travelBetweenPoints {
+                        Picker("Travel Mode", selection: $travelModeRaw) {
+                            ForEach(TravelSimulator.Mode.allCases) { mode in
+                                Text(mode.title).tag(mode.rawValue)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        Text("Auto walks trips under 1.5 km and drives longer ones. Trips take real time.")
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 } header: {
                     Text("Location Simulation")

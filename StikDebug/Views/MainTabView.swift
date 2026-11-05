@@ -214,6 +214,32 @@ struct MainTabView: View {
             return
         }
 
+        let destination = CLLocationCoordinate2D(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        if TravelSimulator.shared.shouldTravel(to: destination) {
+            TravelSimulator.shared.travel(
+                to: destination,
+                deviceIP: DeviceConnectionContext.targetIPAddress,
+                pairingFilePath: pairingFile.path
+            ) { code in
+                if let code {
+                    showAlert(
+                        title: "Travel Simulation Failed",
+                        message: "Could not continue moving to the new location (error \(code)). Holding at the last reported point.",
+                        showOk: true
+                    )
+                } else {
+                    LogManager.shared.addInfoLog(
+                        String(format: "Arrived at URL location: %.6f, %.6f", destination.latitude, destination.longitude)
+                    )
+                }
+            }
+            LogManager.shared.addInfoLog(
+                String(format: "Travelling to URL location: %.6f, %.6f", destination.latitude, destination.longitude)
+            )
+            return
+        }
+        TravelSimulator.shared.cancel()
+
         LocationSimulationCommandQueue.shared.async {
             let code = simulate_location(
                 DeviceConnectionContext.targetIPAddress,
@@ -265,6 +291,7 @@ struct MainTabView: View {
             let code = clear_simulated_location()
             DispatchQueue.main.async {
                 if code == 0 {
+                    TravelSimulator.shared.cancel()
                     LocationSimulationSession.shared.stop()
                     LogManager.shared.addInfoLog("Cleared simulated location from URL")
                 } else {

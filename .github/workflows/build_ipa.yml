@@ -19,7 +19,7 @@ jobs:
       github.ref_type == 'tag' ||
       github.repository != 'StikDebug/StikDebug' ||
       github.ref == 'refs/heads/main'
-    runs-on: macos-26
+    runs-on: xcode-27
     outputs:
       version: ${{ steps.version.outputs.version }}
     env:
